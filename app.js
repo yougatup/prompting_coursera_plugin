@@ -3,5 +3,9 @@ var width = 600,
   centered;
 
 $(document).ready( function() {
-    alert("yay");
+        $("#submitBtn").click( function() {
+                var myInput = $("#studentInput").val();
+
+                $("#myFeedback").text(myInput);
+                });
 });
