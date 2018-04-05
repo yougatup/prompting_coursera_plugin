@@ -3,9 +3,9 @@ var width = 600,
   centered;
 
 $(document).ready( function() {
-        $("#submitBtn").click( function() {
-                var myInput = $("#studentInput").val();
+    $("#submitBtn").click( function() {
+        var myInput = $("#studentInput").val();
 
-                $("#myFeedback").text(myInput);
-                });
+        $("#myFeedback").text(myInput);
+    });
 });
