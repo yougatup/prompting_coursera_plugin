@@ -1,0 +1,37 @@
+{
+  "short_name": "In-video prompting",
+  "name": "In-video prompting",
+  "description": "In-video prompting",
+  "maintainer": {
+    "name": "Hyungyu Shin",
+    "email": "hyungyu.sh@kaist.ac.kr"
+  },
+  "version": "0.0.1",
+  "sandbox": "allow-scripts allow-same-origin allow-forms",
+  "macros": [],
+  "authorizations": {},
+  "actionTypes": [
+    "SET_ANSWER",
+    "SET_HEIGHT",
+    "GET_SESSION_CONFIGURATION"
+  ],
+  "configurationExamples": [
+    {
+      "name": "Louisiana",
+      "description": "The correct answer is Louisiana",
+      "configuration": {},
+      "graderConfiguration": {
+        "stateId": 22
+      }
+    }
+  ],
+  "simulator": {
+    "sessionId": "060a5f28-60ed-4856-bac1-a12e8f5a0d64",
+    "scope": {}
+  },
+  "accessibility": {
+    "mobileCompatibility": {
+      "supportsTouch": true
+    }
+  }
+}
