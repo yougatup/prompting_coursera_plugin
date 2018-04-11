@@ -9,23 +9,48 @@
 ">
 -->
 <link rel="stylesheet" type="text/css" href="myStyle.css">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 
 <body>
   <div id="app">
     <div id='outer'>
       <div id="vis">
-          <div id='question'> Here is the question </div> <br>
+          <div id='question'> Describe what you have learned so far. </div> <br>
+		  <div id='wrapper'> 
           <textarea id='studentInput'> </textarea>
-          <div id='myFeedback'> </div> 
-          <br>
-          <input id='submitBtn' type='button' value='Submit'> 
+          <input id='helpBtn' class='midBtn clickable whiteblue' type='button' value='?'> 
+
+
+          <input id='studentBtn' class='smallBtn disabled' type='button' value='S'> 
+          <input id='instructorBtn' class='smallBtn disabled' type='button' value='I'> 
+
+		  </div>
+
+		  <div id='studentBubble'>
+		  </div>
+
+		  <div id='instructorBubble'>
+		  </div>
+
+		  <br> <br>
+
+          <input id='anotherQuestionBtn' class='btn green' type='button' value='Another question'> 
+          <input id='submitBtn' class='btn green' type='button' value='Submit'> 
+
+		  <div id="dialog" title="Help">
+<b>I</b>: Show the instructor's explanation. <br> <br>
+<b>S</b>: Show a student's explanation. <br> <br>
+<b>Submit</b>: Submit your response. You cannot browse other's explanation unless you submit your explanation. <br> <br>
+<b>Another question</b>: Show another qeustion. 
+</div>
       </div>
     </div>
   </div>
 
   <script src="https://www.coursera.org/widget/coursera-widget-connect-v0.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
   <script src="app.js"></script>
 </body>
 
