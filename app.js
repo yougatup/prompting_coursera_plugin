@@ -12,7 +12,7 @@ var myData = [
  "Instructor's explanation", 
  ["Student's explanation 1", "Student's expxlanation 2"]],
 
- ["Describe whatever you want.",
+ ["Describe the data-ink ratio.",
  "Instructor's explanation 2", 
  ["Student's explanation 3", "Student's expxlanation 4"]]
 
