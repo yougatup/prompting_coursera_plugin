@@ -13,14 +13,18 @@
 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 
 <body>
+  <div id='loading'> 
+    <img id='loadingImage' src='./materials/loading.gif' />
+    <div id='loadingMessage'>Loading...</div>
+  </div>
+
   <div id="app">
     <div id='outer'>
       <div id="vis">
-          <div id='question'> Describe what you have learned so far. </div> <br>
+          <div id='question'> </div> <br>
 		  <div id='wrapper'> 
           <textarea id='studentInput'> </textarea>
           <input id='helpBtn' class='midBtn clickable whiteblue' type='button' value='?'> 
-
 
           <input id='studentBtn' class='smallBtn disabled' type='button' value='S'> 
           <input id='instructorBtn' class='smallBtn disabled' type='button' value='I'> 

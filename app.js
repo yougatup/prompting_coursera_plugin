@@ -2,24 +2,19 @@ var width = 600,
   height = 450,
   centered;
 
+var moocletQueryURL = "https://test.mooclet.com/engine/api/v1/mooclet/44/run";
+var moocletValueURL = "https://test.mooclet.com/engine/api/v1/value";
 var instructorBubbleShown=false;
 var studentBubbleShown=false;
+var nowLoading = false;
 
+var instructorBubbleText = '';
+var studentBubbleText = '';
+var questionText = '';
 var questionIdx = 0;
 
-var myData = [
- ["Describe what you have learned so far.",
- "Instructor's explanation", 
- ["Student's explanation 1", "Student's expxlanation 2"]],
-
- ["Describe the data-ink ratio.",
- "Instructor's explanation 2", 
- ["Student's explanation 3", "Student's expxlanation 4"]]
-
-]
-
 function showInstructorBubble() {
-    $("#instructorBubble").text(myData[questionIdx][1]);
+    $("#instructorBubble").text(instructorBubbleText);
 
     $("#instructorBubble").show();
     $("#studentBubble").hide();
@@ -29,7 +24,7 @@ function showInstructorBubble() {
 }
 
 function showStudentBubble() {
-    $("#studentBubble").text(myData[questionIdx][2][0]);
+    $("#studentBubble").text(studentBubbleText);
 
     $("#instructorBubble").hide();
     $("#studentBubble").show();
@@ -77,23 +72,81 @@ function enableExplanationButtons() {
 }
 
 function initialize() {
+    showLoading();
+
     hideInstructorBubble();
     hideStudentBubble();
 
     disableExplanationButtons();
     enableTextbox();
 
-    refreshQuestion();
+    loadQuestion();
+}
+
+function loadQuestion() {
+    $.get({
+            url: moocletQueryURL,
+            data:'',
+            success: onSuccessLoadingQuestion,
+            dataType: "json",
+            headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
+}
+
+function putResponse(learnerResponse) {
+
+    learnerResponse = learnerResponse.replace(/(\r\n\t|\n|\r\t)/gm," ");
+
+    $.ajax({
+             type: 'POST',
+             url: moocletValueURL,
+             data: '{' + 
+             '"variable": "learnerResponse",' + 
+             '"learner": null,' + 
+             '"mooclet": 44,' + 
+             '"version": ' + questionIdx + ',' + 
+             '"policy": null,' + 
+             '"value": 0.0,' + 
+             '"text": "' + learnerResponse + '",' + 
+             '"timestamp": ""' + 
+             '}', // or JSON.stringify ({name: 'jonas'}),
+             success: onSuccessPuttingResponse,
+             contentType: "application/json",
+             dataType: 'json',
+             headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
+}
+
+function onSuccessPuttingResponse(data) {
+    console.log(data);
+}
+
+function onSuccessLoadingQuestion(data) {
+    questionText = data.text;
+    questionIdx = data.id;
+
+    console.log(questionText);
+
+    $("#question").text(questionText);
+
+    hideLoading();
 }
 
 function getRandomArbitrary(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
-function refreshQuestion() {
-    questionIdx = getRandomArbitrary(0, myData.length);
+function showLoading() {
+    $("#loading").show();
+    nowLoading = true;
+}
 
-    $("#question").text(myData[questionIdx][0]);
+function hideLoading() {
+    $("#loading").hide();
+    nowLoading = false;
+}
+
+function refreshQuestion() {
 }
 
 function disableTextbox() {
@@ -114,10 +167,14 @@ $(document).ready( function() {
     initialize();
 
     $("#submitBtn").click( function() {
-        var myInput = $("#studentInput").val();
+        if(!$("#studentInput").prop('disabled')) {
+            var myInput = $("#studentInput").val();
 
-        enableExplanationButtons();
-        disableTextbox();
+            enableExplanationButtons();
+            disableTextbox();
+
+            putResponse(myInput);
+        }
     });
 
     $("#instructorBtn").click(function() {
