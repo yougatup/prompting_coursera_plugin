@@ -13,6 +13,9 @@ var studentBubbleText = '';
 var questionText = '';
 var questionIdx = 0;
 
+var numCharacter = 0;
+var characterLimit = 50;
+
 function showInstructorBubble() {
     $("#instructorBubble").text(instructorBubbleText);
 
@@ -21,6 +24,25 @@ function showInstructorBubble() {
 
     instructorBubbleShown = true;
     studentBubbleShown = false;
+
+    $.ajax({
+             type: 'POST',
+             url: moocletValueURL,
+             data: '{' + 
+             '"variable": "instructorButton",' + 
+             '"learner": null,' + 
+             '"mooclet": 44,' + 
+             '"version": ' + questionIdx + ',' + 
+             '"policy": null,' + 
+             '"value": 0.0,' + 
+             '"text": "' + instructorBubbleText + '",' + 
+             '"timestamp": ""' + 
+             '}', // or JSON.stringify ({name: 'jonas'}),
+             success: onSuccessPuttingResponse,
+             contentType: "application/json",
+             dataType: 'json',
+             headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
 }
 
 function showStudentBubble() {
@@ -31,21 +53,82 @@ function showStudentBubble() {
 
     instructorBubbleShown = false;
     studentBubbleShown = true;
+
+    $.ajax({
+             type: 'POST',
+             url: moocletValueURL,
+             data: '{' + 
+             '"variable": "studentButton",' + 
+             '"learner": null,' + 
+             '"mooclet": 44,' + 
+             '"version": ' + questionIdx + ',' + 
+             '"policy": null,' + 
+             '"value": 0.0,' + 
+             '"text": "' + studentBubbleText + '",' + 
+             '"timestamp": ""' + 
+             '}', // or JSON.stringify ({name: 'jonas'}),
+             success: onSuccessPuttingResponse,
+             contentType: "application/json",
+             dataType: 'json',
+             headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
 }
 
-function hideInstructorBubble() {
+function hideInstructorBubble(flag) {
     $("#instructorBubble").hide();
     instructorBubbleShown = false;
+
+    if(flag == false) {
+        $.ajax({
+                 type: 'POST',
+                 url: moocletValueURL,
+                 data: '{' + 
+                 '"variable": "instructorButton",' + 
+                 '"learner": null,' + 
+                 '"mooclet": 44,' + 
+                 '"version": ' + questionIdx + ',' + 
+                 '"policy": null,' + 
+                 '"value": 1.0,' + 
+                 '"text": "",' + 
+                 '"timestamp": ""' + 
+                 '}', // or JSON.stringify ({name: 'jonas'}),
+                 success: onSuccessPuttingResponse,
+                 contentType: "application/json",
+                 dataType: 'json',
+                 headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+              });
+    }
 }
 
-function hideStudentBubble() {
+function hideStudentBubble(flag) {
     $("#studentBubble").hide();
     studentBubbleShown = false;
+
+    if(flag == false) {
+      $.ajax({
+               type: 'POST',
+               url: moocletValueURL,
+               data: '{' + 
+               '"variable": "studentButton",' + 
+               '"learner": null,' + 
+               '"mooclet": 44,' + 
+               '"version": ' + questionIdx + ',' + 
+               '"policy": null,' + 
+               '"value": 1.0,' + 
+               '"text": "",' + 
+               '"timestamp": ""' + 
+               '}', // or JSON.stringify ({name: 'jonas'}),
+               success: onSuccessPuttingResponse,
+               contentType: "application/json",
+               dataType: 'json',
+               headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+            });
+    }
 }
 
 function toggleInstructorBubble() {
     if(instructorBubbleShown == true) {
-        hideInstructorBubble();
+        hideInstructorBubble(false);
     }
     else {
         showInstructorBubble();
@@ -54,7 +137,7 @@ function toggleInstructorBubble() {
 
 function toggleStudentBubble() {
     if(studentBubbleShown == true) {
-        hideStudentBubble();
+        hideStudentBubble(false);
     }
     else {
         showStudentBubble();
@@ -64,6 +147,30 @@ function toggleStudentBubble() {
 function disableExplanationButtons() {
     $(".smallBtn").removeClass("clickable blue");
     $(".smallBtn").addClass("disabled");
+
+    hideStudentBubble(true);
+    hideInstructorBubble(true);
+}
+
+function setProcessingSymbol() {
+    $("#feedbackSymbol").css("border", "2px solid #999999");
+    $("#feedbackSymbol").css("background-color", "#999999");
+
+    $("#feedbackText").css("color", "#999999");
+}
+
+function setCompleteSymbol() {
+    $("#feedbackSymbol").css("border", "2px solid #5cb85c");
+    $("#feedbackSymbol").css("background-color", "#5cb85c");
+
+    $("#feedbackText").css("color", "#5cb85c");
+}
+
+function setErrorSymbol() {
+    $("#feedbackSymbol").css("border", "2px solid red");
+    $("#feedbackSymbol").css("background-color", "red");
+
+    $("#feedbackText").css("color", "red");
 }
 
 function enableExplanationButtons() {
@@ -71,11 +178,20 @@ function enableExplanationButtons() {
     $(".smallBtn").addClass("clickable blue");
 }
 
+function addKeypressEvent() {
+    $("#studentInput").bind('input propertychange', keyPressEvent);
+}
+
 function initialize() {
     showLoading();
+    addKeypressEvent();
+    // setProcessingSymbol();
 
-    hideInstructorBubble();
-    hideStudentBubble();
+    numCharacter = 0;
+    printNumCharacters();
+
+    hideInstructorBubble(true);
+    hideStudentBubble(true);
 
     disableExplanationButtons();
     enableTextbox();
@@ -94,8 +210,11 @@ function loadQuestion() {
 }
 
 function putResponse(learnerResponse) {
-
     learnerResponse = learnerResponse.replace(/(\r\n\t|\n|\r\t)/gm," ");
+    learnerResponse = learnerResponse.replace(/([\"\'])/g,"'");
+    learnerResponse = learnerResponse.replace(/\\/g,"\\\\");
+
+    console.log(learnerResponse);
 
     $.ajax({
              type: 'POST',
@@ -127,9 +246,53 @@ function onSuccessLoadingQuestion(data) {
 
     console.log(questionText);
 
+    $.ajax({
+             type: 'POST',
+             url: moocletValueURL,
+             data: '{' + 
+             '"variable": "questionGet",' + 
+             '"learner": null,' + 
+             '"mooclet": 44,' + 
+             '"version": ' + questionIdx + ',' + 
+             '"policy": null,' + 
+             '"value": 0.0,' + 
+             '"text": "' + questionText + '",' + 
+             '"timestamp": ""' + 
+             '}', // or JSON.stringify ({name: 'jonas'}),
+             success: onSuccessPuttingResponse,
+             contentType: "application/json",
+             dataType: 'json',
+             headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
     $("#question").text(questionText);
 
     hideLoading();
+}
+
+function keyPressEvent(event) {
+    var response = $("#studentInput").val();
+
+    updateLimit();
+    putResponse(response);
+
+    //setCompleteSymbol();
+}
+
+function printNumCharacters() {
+    $("#numLetters").text('Character count: ' + numCharacter + ' (minimum ' + characterLimit + ' characters)');
+}
+
+function updateLimit() {
+    numCharacter = $("#studentInput").val().length;
+
+    if(numCharacter >= characterLimit) {
+        enableExplanationButtons();
+    }
+    else {
+        disableExplanationButtons();
+    }
+
+    printNumCharacters();
 }
 
 function getRandomArbitrary(min, max) {

@@ -75,7 +75,6 @@ cursor: none;
 }
 
 .smallBtn {
-	width: 40px;
 	height: 40px;
 	margin: 1px;
     float: right;
@@ -171,7 +170,7 @@ margin-right: 0px;
 	content: '';
 	position: absolute;
 	top: 0;
-	right: 25px;
+	right: 100px;
 	width: 0;
 	height: 0;
 	border: 20px solid transparent;
@@ -196,7 +195,7 @@ margin-right: 0px;
 	content: '';
 	position: absolute;
 	top: 0;
-	right: 70px;
+	right: 315px;
 	width: 0;
 	height: 0;
 	border: 20px solid transparent;
@@ -243,4 +242,27 @@ display: none;
 #loadingMessage {
 font-family: 'Roboto', sans-serif;
 font-size: 20px;   
+}
+
+#numLetters {
+float: right;
+}
+
+#feedback {
+    margin-left: 10px;
+}
+
+#feedbackSymbol {
+float: left;
+margin-right: 5px;
+border: 2px solid #5cb85c; 
+background-color: #5cb85c;
+border-radius: 8px; 
+width: 8px; 
+height: 8px;
+}
+
+#feedbackText {
+float: left;
+color: #5cb85c;
 }
