@@ -2,7 +2,6 @@ var width = 600,
   height = 450,
   centered;
 
-var moocletQueryURL = "https://test.mooclet.com/engine/api/v1/mooclet/44/run";
 var moocletValueURL = "https://test.mooclet.com/engine/api/v1/value";
 var instructorBubbleShown=false;
 var studentBubbleShown=false;
@@ -12,9 +11,35 @@ var instructorBubbleText = '';
 var studentBubbleText = '';
 var questionText = '';
 var questionIdx = 0;
+var moocletId = 0;
+var userId;
 
 var numCharacter = 0;
 var characterLimit = 50;
+
+function getMoocletQueryURL(myMoocletId) {
+    return "https://test.mooclet.com/engine/api/v1/mooclet/" + myMoocletId + "/run";
+}
+
+var getParameters = function (paramName) {
+    // 리턴값을 위한 변수 선언
+    var returnValue;
+
+    // 현재 URL 가져오기
+    var url = location.href;
+
+    // get 파라미터 값을 가져올 수 있는 ? 를 기점으로 slice 한 후 split 으로 나눔
+    var parameters = (url.slice(url.indexOf('?') + 1, url.length)).split('&');
+
+    // 나누어진 값의 비교를 통해 paramName 으로 요청된 데이터의 값만 return
+    for (var i = 0; i < parameters.length; i++) {
+        var varName = parameters[i].split('=')[0];
+        if (varName.toUpperCase() == paramName.toUpperCase()) {
+            returnValue = parameters[i].split('=')[1];
+            return decodeURIComponent(returnValue);
+        }
+    }
+};
 
 function showInstructorBubble() {
     $("#instructorBubble").text(instructorBubbleText);
@@ -31,7 +56,7 @@ function showInstructorBubble() {
              data: '{' + 
              '"variable": "instructorButton",' + 
              '"learner": null,' + 
-             '"mooclet": 44,' + 
+             '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
              '"value": 0.0,' + 
@@ -60,7 +85,7 @@ function showStudentBubble() {
              data: '{' + 
              '"variable": "studentButton",' + 
              '"learner": null,' + 
-             '"mooclet": 44,' + 
+             '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
              '"value": 0.0,' + 
@@ -85,7 +110,7 @@ function hideInstructorBubble(flag) {
                  data: '{' + 
                  '"variable": "instructorButton",' + 
                  '"learner": null,' + 
-                 '"mooclet": 44,' + 
+                 '"mooclet": ' + moocletId + ',' + 
                  '"version": ' + questionIdx + ',' + 
                  '"policy": null,' + 
                  '"value": 1.0,' + 
@@ -111,7 +136,7 @@ function hideStudentBubble(flag) {
                data: '{' + 
                '"variable": "studentButton",' + 
                '"learner": null,' + 
-               '"mooclet": 44,' + 
+               '"mooclet": ' + moocletId + ',' + 
                '"version": ' + questionIdx + ',' + 
                '"policy": null,' + 
                '"value": 1.0,' + 
@@ -183,6 +208,9 @@ function addKeypressEvent() {
 }
 
 function initialize() {
+    moocletId = getParameters("moocletId");
+    userId = getParameters("userId");
+
     showLoading();
     addKeypressEvent();
     // setProcessingSymbol();
@@ -196,12 +224,12 @@ function initialize() {
     disableExplanationButtons();
     enableTextbox();
 
-    loadQuestion();
+    loadQuestion(moocletId);
 }
 
-function loadQuestion() {
+function loadQuestion(moocletId) {
     $.get({
-            url: moocletQueryURL,
+            url: getMoocletQueryURL(moocletId),
             data:'',
             success: onSuccessLoadingQuestion,
             dataType: "json",
@@ -222,7 +250,7 @@ function putResponse(learnerResponse) {
              data: '{' + 
              '"variable": "learnerResponse",' + 
              '"learner": null,' + 
-             '"mooclet": 44,' + 
+             '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
              '"value": 0.0,' + 
@@ -252,7 +280,7 @@ function onSuccessLoadingQuestion(data) {
              data: '{' + 
              '"variable": "questionGet",' + 
              '"learner": null,' + 
-             '"mooclet": 44,' + 
+             '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
              '"value": 0.0,' + 
@@ -329,7 +357,7 @@ function enableTextbox() {
 $(document).ready( function() {
     initialize();
 
-    $("#submitBtn").click( function() {
+ /*   $("#submitBtn").click( function() {
         if(!$("#studentInput").prop('disabled')) {
             var myInput = $("#studentInput").val();
 
@@ -338,7 +366,7 @@ $(document).ready( function() {
 
             putResponse(myInput);
         }
-    });
+    });*/
 
     $("#instructorBtn").click(function() {
         if($("#instructorBtn").hasClass("clickable")) {
@@ -354,6 +382,25 @@ $(document).ready( function() {
 
     $("#anotherQuestionBtn").click(function() {
         initialize();
+
+    $.ajax({
+             type: 'POST',
+             url: moocletValueURL,
+             data: '{' + 
+             '"variable": "anotherQuestionButton",' + 
+             '"learner": null,' + 
+             '"mooclet": ' + moocletId + ',' + 
+             '"version": ' + questionIdx + ',' + 
+             '"policy": null,' + 
+             '"value": 0.0,' + 
+             '"text": "",' + 
+             '"timestamp": ""' + 
+             '}', // or JSON.stringify ({name: 'jonas'}),
+             success: onSuccessPuttingResponse,
+             contentType: "application/json",
+             dataType: 'json',
+             headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
     });
 
     $("#helpBtn").click(function() {
