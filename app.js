@@ -1,6 +1,14 @@
+// Config files
+
+var characterLimitDisplay = true;
+var explanationButtons = true;
+var anotherQuestionButton = true;
+
 var width = 600,
   height = 450,
   centered;
+
+var firstInstructionFlag = false;
 
 var moocletValueURL = "https://test.mooclet.com/engine/api/v1/value";
 var instructorBubbleShown=false;
@@ -13,12 +21,13 @@ var questionText = '';
 var questionIdx = 0;
 var moocletId = 0;
 var userId;
+var lastLoggedResponse = 'LAST_LOGGED_RESPONSE';
 
 var numCharacter = 0;
 var characterLimit = 50;
 
 function getMoocletQueryURL(myMoocletId) {
-    return "https://test.mooclet.com/engine/api/v1/mooclet/" + myMoocletId + "/run";
+    return "https://test.mooclet.com/engine/api/v1/mooclet/" + myMoocletId + "/run?user_id=" + userId;
 }
 
 var getParameters = function (paramName) {
@@ -55,7 +64,7 @@ function showInstructorBubble() {
              url: moocletValueURL,
              data: '{' + 
              '"variable": "instructorButton",' + 
-             '"learner": null,' + 
+             '"learner": "' + userId + '",' + 
              '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
@@ -84,7 +93,7 @@ function showStudentBubble() {
              url: moocletValueURL,
              data: '{' + 
              '"variable": "studentButton",' + 
-             '"learner": null,' + 
+             '"learner": "' + userId + '",' + 
              '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
@@ -109,7 +118,7 @@ function hideInstructorBubble(flag) {
                  url: moocletValueURL,
                  data: '{' + 
                  '"variable": "instructorButton",' + 
-                 '"learner": null,' + 
+                 '"learner": "' + userId + '",' + 
                  '"mooclet": ' + moocletId + ',' + 
                  '"version": ' + questionIdx + ',' + 
                  '"policy": null,' + 
@@ -135,7 +144,7 @@ function hideStudentBubble(flag) {
                url: moocletValueURL,
                data: '{' + 
                '"variable": "studentButton",' + 
-               '"learner": null,' + 
+               '"learner": "' + userId + '",' + 
                '"mooclet": ' + moocletId + ',' + 
                '"version": ' + questionIdx + ',' + 
                '"policy": null,' + 
@@ -203,16 +212,25 @@ function enableExplanationButtons() {
     $(".smallBtn").addClass("clickable blue");
 }
 
-function addKeypressEvent() {
-    $("#studentInput").bind('input propertychange', keyPressEvent);
-}
-
 function initialize() {
     moocletId = getParameters("moocletId");
     userId = getParameters("userId");
+    var condition = getParameters("condition");
+
+    console.log(condition);
+
+    if(condition == '1') {
+        characterLimitDisplay = false;
+        explanationButtons = false;
+        anotherQuestionButton = false;
+    }
+    else {
+        characterLimitDisplay = true;
+        explanationButtons = true;
+        anotherQuestionButton = true;
+    }
 
     showLoading();
-    addKeypressEvent();
     // setProcessingSymbol();
 
     numCharacter = 0;
@@ -221,10 +239,18 @@ function initialize() {
     hideInstructorBubble(true);
     hideStudentBubble(true);
 
-    disableExplanationButtons();
+    if(explanationButtons && characterLimitDisplay)
+        disableExplanationButtons();
+    else
+        enableExplanationButtons();
+
     enableTextbox();
 
     loadQuestion(moocletId);
+
+    // instructor explanation embedding
+
+
 }
 
 function loadQuestion(moocletId) {
@@ -249,7 +275,7 @@ function putResponse(learnerResponse) {
              url: moocletValueURL,
              data: '{' + 
              '"variable": "learnerResponse",' + 
-             '"learner": null,' + 
+             '"learner": "' + userId + '",' + 
              '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
@@ -279,7 +305,7 @@ function onSuccessLoadingQuestion(data) {
              url: moocletValueURL,
              data: '{' + 
              '"variable": "questionGet",' + 
-             '"learner": null,' + 
+             '"learner": "' + userId + '",' + 
              '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
@@ -294,6 +320,68 @@ function onSuccessLoadingQuestion(data) {
           });
     $("#question").text(questionText);
 
+    if(moocletId == 48) {
+        if(questionText[0] == 'D') {
+            instructorBubbleText = "The arithmetic mean is used as a measure of central tendency. It is calculated by sum of values divided by the number of objects.";
+        }
+        else if(questionText[0] == 'H') {
+            instructorBubbleText = "The arithmetic mean is used as a measure of central tendency. It is calculated by sum of values divided by the number of objects.";
+        }
+        else if(questionText[0] == 'W' && questionText[5] == 'i') {
+            instructorBubbleText = "The arithmetic mean";
+        }
+        else instructorBubbleText = '';
+
+        if(firstInstructionFlag == false) {
+			jQuery( "#dialog" ).dialog({
+			   resizable: false,
+			   height: "auto",
+			   width: 450,
+			   modal: true,
+			   closeOnEscape: false,
+			   open: function(event, ui) {
+			       jQuery(".ui-dialog-titlebar-close").hide();
+			       jQuery(".ui-dialog-titlebar").hide();
+			   },
+			   buttons: {
+			       "I understood": function() {
+			           jQuery( this ).dialog( "close" );
+			
+			        //   myVideo.play();
+			       }
+			   }
+               });
+
+            firstInstructionFlag = true;
+        }
+
+    }
+    else if(moocletId == 49) {
+        if(questionText[0] == 'D') {
+            instructorBubbleText = "The population variance represents how dispersed the data is. It is calculated by sum of value minus mean squared by the number of objects.";
+        }
+        else if(questionText[0] == 'H') {
+            instructorBubbleText = "The population variance represents how dispersed the data is. It is calculated by sum of value minus mean squared by the number of objects.";
+        }
+        else if(questionText[0] == 'W' && questionText[5] == 'i') {
+            instructorBubbleText = "The population variance";
+        }
+        else instructorBubbleText = '';
+    }
+    else if(moocletId == 50) {
+        if(questionText[0] == 'D') {
+            instructorBubbleText = "The population standard deviation is used because we need to use a consistent measure. It is calculated by the square root of the variance.";
+        }
+        else if(questionText[0] == 'H') {
+            instructorBubbleText = "The population standard deviation is used because we need to use a consistent measure. It is calculated by the square root of the variance.";
+        }
+        else if(questionText[0] == 'W' && questionText[5] == 'i') {
+            instructorBubbleText = "The population standard deviation";
+        }
+        else instructorBubbleText = '';
+    }
+    else instructorBubbleText = '';
+
     hideLoading();
 }
 
@@ -301,7 +389,7 @@ function keyPressEvent(event) {
     var response = $("#studentInput").val();
 
     updateLimit();
-    putResponse(response);
+    //putResponse(response);
 
     //setCompleteSymbol();
 }
@@ -313,11 +401,13 @@ function printNumCharacters() {
 function updateLimit() {
     numCharacter = $("#studentInput").val().length;
 
-    if(numCharacter >= characterLimit) {
-        enableExplanationButtons();
-    }
-    else {
-        disableExplanationButtons();
+    if(characterLimitDisplay) {
+        if(numCharacter >= characterLimit) {
+            enableExplanationButtons();
+        }
+        else {
+            disableExplanationButtons();
+        }
     }
 
     printNumCharacters();
@@ -329,11 +419,15 @@ function getRandomArbitrary(min, max) {
 
 function showLoading() {
     $("#loading").show();
+    $("#app").hide();
+
     nowLoading = true;
 }
 
 function hideLoading() {
     $("#loading").hide();
+    $("#app").show();
+
     nowLoading = false;
 }
 
@@ -354,8 +448,29 @@ function enableTextbox() {
     $("#studentInput").val('');
 }
 
+function UISetup() {
+    if(characterLimitDisplay) $("#numLetters").show();
+    else $("#numLetters").hide();
+
+    if(explanationButtons) {
+        $("#studentBtn").show();
+        $("#instructorBtn").show();
+
+        if(characterLimitDisplay) disableExplanationButtons();
+        else enableExplanationButtons();
+    }
+    else {
+        $("#studentBtn").hide();
+        $("#instructorBtn").hide();
+    }
+
+    if(anotherQuestionButton) $("#anotherQuestionBtn").show();
+    else $("#anotherQuestionBtn").hide();
+}
+
 $(document).ready( function() {
     initialize();
+    UISetup();
 
  /*   $("#submitBtn").click( function() {
         if(!$("#studentInput").prop('disabled')) {
@@ -380,6 +495,8 @@ $(document).ready( function() {
         }
     });
 
+    $("#studentInput").bind('input propertychange', keyPressEvent);
+
     $("#anotherQuestionBtn").click(function() {
         initialize();
 
@@ -388,7 +505,7 @@ $(document).ready( function() {
              url: moocletValueURL,
              data: '{' + 
              '"variable": "anotherQuestionButton",' + 
-             '"learner": null,' + 
+             '"learner": "' + userId + '",' + 
              '"mooclet": ' + moocletId + ',' + 
              '"version": ' + questionIdx + ',' + 
              '"policy": null,' + 
@@ -410,4 +527,13 @@ $(document).ready( function() {
            height: 250
         });
     });
+
+    var intervalID = setInterval(function(){
+        var response = $("#studentInput").val();
+
+        if(response != lastLoggedResponse) 
+            putResponse(response);
+
+        lastLoggedResponse = response;
+    }, 500);
 });
