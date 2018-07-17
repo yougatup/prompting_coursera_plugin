@@ -270,3 +270,9 @@ height: 8px;
 float: left;
 color: #5cb85c;
 }
+
+#thanksMessage {
+display: none;
+		 text-align: center;
+width: 100%;
+}

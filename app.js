@@ -213,9 +213,18 @@ function enableExplanationButtons() {
 }
 
 function initialize() {
+	$("#thanksMessage").hide();
+
     moocletId = getParameters("moocletId");
     userId = getParameters("userId");
     var condition = getParameters("condition");
+
+	/*  TESTING */
+
+	moocletId = 69;
+	userId = 'COURSERA_TEST';
+	condition = '2';
+	firstInstructionFlag = true;
 
     console.log(condition);
 
@@ -249,8 +258,6 @@ function initialize() {
     loadQuestion(moocletId);
 
     // instructor explanation embedding
-
-
 }
 
 function loadQuestion(moocletId) {
@@ -268,7 +275,7 @@ function putResponse(learnerResponse) {
     learnerResponse = learnerResponse.replace(/([\"\'])/g,"'");
     learnerResponse = learnerResponse.replace(/\\/g,"\\\\");
 
-    console.log(learnerResponse);
+    // console.log(learnerResponse);
 
     $.ajax({
              type: 'POST',
@@ -291,14 +298,51 @@ function putResponse(learnerResponse) {
 }
 
 function onSuccessPuttingResponse(data) {
-    console.log(data);
+    // console.log(data);
 }
 
+function loadInstructorExplanation(moocletId) {
+    $.get({
+            url: getMoocletQueryURL(moocletId),
+            data:'',
+            success: onSuccessInstructorExplanation,
+            dataType: "json",
+            headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
+}
+
+function loadStudentExplanation(moocletId) {
+    $.get({
+            url: getMoocletQueryURL(moocletId),
+            data:'',
+            success: onSuccessStudentExplanation,
+            dataType: "json",
+            headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+          });
+}
+
+function onSuccessInstructorExplanation(data) {
+    myText = data.text;
+
+    instructorBubbleText = myText;
+}
+
+function onSuccessStudentExplanation(data) {
+    myText = data.text;
+
+    studentBubbleText = myText;
+}
 function onSuccessLoadingQuestion(data) {
     questionText = data.text;
     questionIdx = data.id;
 
+    IEmoocletID = data.version_json.instructor_explanation_moocletid;
+    SEmoocletID = data.version_json.student_explanation_moocletid;
+
     console.log(questionText);
+
+    console.log(IEmoocletID);
+    console.log(SEmoocletID);
 
     $.ajax({
              type: 'POST',
@@ -320,67 +364,8 @@ function onSuccessLoadingQuestion(data) {
           });
     $("#question").text(questionText);
 
-    if(moocletId == 48) {
-        if(questionText[0] == 'D') {
-            instructorBubbleText = "The arithmetic mean is used as a measure of central tendency. It is calculated by sum of values divided by the number of objects.";
-        }
-        else if(questionText[0] == 'H') {
-            instructorBubbleText = "The arithmetic mean is used as a measure of central tendency. It is calculated by sum of values divided by the number of objects.";
-        }
-        else if(questionText[0] == 'W' && questionText[5] == 'i') {
-            instructorBubbleText = "The arithmetic mean";
-        }
-        else instructorBubbleText = '';
-
-        if(firstInstructionFlag == false) {
-			jQuery( "#dialog" ).dialog({
-			   resizable: false,
-			   height: "auto",
-			   width: 450,
-			   modal: true,
-			   closeOnEscape: false,
-			   open: function(event, ui) {
-			       jQuery(".ui-dialog-titlebar-close").hide();
-			       jQuery(".ui-dialog-titlebar").hide();
-			   },
-			   buttons: {
-			       "I understood": function() {
-			           jQuery( this ).dialog( "close" );
-			
-			        //   myVideo.play();
-			       }
-			   }
-               });
-
-            firstInstructionFlag = true;
-        }
-
-    }
-    else if(moocletId == 49) {
-        if(questionText[0] == 'D') {
-            instructorBubbleText = "The population variance represents how dispersed the data is. It is calculated by sum of value minus mean squared by the number of objects.";
-        }
-        else if(questionText[0] == 'H') {
-            instructorBubbleText = "The population variance represents how dispersed the data is. It is calculated by sum of value minus mean squared by the number of objects.";
-        }
-        else if(questionText[0] == 'W' && questionText[5] == 'i') {
-            instructorBubbleText = "The population variance";
-        }
-        else instructorBubbleText = '';
-    }
-    else if(moocletId == 50) {
-        if(questionText[0] == 'D') {
-            instructorBubbleText = "The population standard deviation is used because we need to use a consistent measure. It is calculated by the square root of the variance.";
-        }
-        else if(questionText[0] == 'H') {
-            instructorBubbleText = "The population standard deviation is used because we need to use a consistent measure. It is calculated by the square root of the variance.";
-        }
-        else if(questionText[0] == 'W' && questionText[5] == 'i') {
-            instructorBubbleText = "The population standard deviation";
-        }
-        else instructorBubbleText = '';
-    }
-    else instructorBubbleText = '';
+    loadInstructorExplanation(IEmoocletID);
+    loadStudentExplanation(SEmoocletID);
 
     hideLoading();
 }
@@ -469,71 +454,127 @@ function UISetup() {
 }
 
 $(document).ready( function() {
-    initialize();
-    UISetup();
 
- /*   $("#submitBtn").click( function() {
-        if(!$("#studentInput").prop('disabled')) {
-            var myInput = $("#studentInput").val();
+	courseraApi.callMethod({
+    	type: "GET_SESSION_CONFIGURATION",
+    	onSuccess: function(configuration) {
+    	  const { stateId, stateName, feedback, isCorrect } = configuration;
 
-            enableExplanationButtons();
-            disableTextbox();
+		  console.log("GET SESSION SUCCEEDED!");
+		  console.log(configuration);
 
-            putResponse(myInput);
-        }
-    });*/
+		  if(configuration.isCorrect == null) {
+		  	console.log("yes, it is null");
 
-    $("#instructorBtn").click(function() {
-        if($("#instructorBtn").hasClass("clickable")) {
-            toggleInstructorBubble();
-        }
-    });
-    
-    $("#studentBtn").click(function() {
-        if($("#studentBtn").hasClass("clickable")) {
-            toggleStudentBubble();
-        }
-    });
+    		initialize();
+    		UISetup();
 
-    $("#studentInput").bind('input propertychange', keyPressEvent);
+			 /*   $("#submitBtn").click( function() {
+			        if(!$("#studentInput").prop('disabled')) {
+			            var myInput = $("#studentInput").val();
+			
+			            enableExplanationButtons();
+			            disableTextbox();
+			
+			            putResponse(myInput);
+			        }
+			    });*/
+			
+			    $("#instructorBtn").click(function() {
+			        if($("#instructorBtn").hasClass("clickable")) {
+			            toggleInstructorBubble();
+			        }
+			    });
+			    
+			    $("#studentBtn").click(function() {
+			        if($("#studentBtn").hasClass("clickable")) {
+			            toggleStudentBubble();
+			        }
+			    });
+			
+			    $("#studentInput").bind('input propertychange', keyPressEvent);
+			
+			    $("#anotherQuestionBtn").click(function() {
+			        initialize();
+			
+			    $.ajax({
+			             type: 'POST',
+			             url: moocletValueURL,
+			             data: '{' + 
+			             '"variable": "anotherQuestionButton",' + 
+			             '"learner": "' + userId + '",' + 
+			             '"mooclet": ' + moocletId + ',' + 
+			             '"version": ' + questionIdx + ',' + 
+			             '"policy": null,' + 
+			             '"value": 0.0,' + 
+			             '"text": "",' + 
+			             '"timestamp": ""' + 
+			             '}', // or JSON.stringify ({name: 'jonas'}),
+			             success: onSuccessPuttingResponse,
+			             contentType: "application/json",
+			             dataType: 'json',
+			             headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
+			          });
+			    });
+			
+			    $("#helpBtn").click(function() {
+			        $("#dialog").dialog(
+			        {
+			           width: 400,
+			           height: 250
+			        });
+			    });
+			
+			    var intervalID = setInterval(function(){
+			        var response = $("#studentInput").val();
+			
+			        if(response != lastLoggedResponse) 
+			            putResponse(response);
+			
+			        lastLoggedResponse = response;
+			    }, 500);
+		  }
+		  else {
+		 	 console.log("no, it is not null");
 
-    $("#anotherQuestionBtn").click(function() {
-        initialize();
+			 $("#thanksMessage").show();
 
-    $.ajax({
-             type: 'POST',
-             url: moocletValueURL,
-             data: '{' + 
-             '"variable": "anotherQuestionButton",' + 
-             '"learner": "' + userId + '",' + 
-             '"mooclet": ' + moocletId + ',' + 
-             '"version": ' + questionIdx + ',' + 
-             '"policy": null,' + 
-             '"value": 0.0,' + 
-             '"text": "",' + 
-             '"timestamp": ""' + 
-             '}', // or JSON.stringify ({name: 'jonas'}),
-             success: onSuccessPuttingResponse,
-             contentType: "application/json",
-             dataType: 'json',
-             headers: {"Authorization": "Token 80a7c6e452aeef4c3a1562aff199e409c44b90a9"}
-          });
-    });
+			 $("#app").hide();
+			 $("#loading").hide();
+		  }
+		  
 
-    $("#helpBtn").click(function() {
-        $("#dialog").dialog(
-        {
-           width: 400,
-           height: 250
-        });
-    });
+		  /*
+    	  if (stateId) {
+    	    g.selectAll("path").classed("active", function(d) {
+    	      return d.id === stateId;
+    	    });
+    	  }
 
-    var intervalID = setInterval(function(){
-        var response = $("#studentInput").val();
+    	  if (stateName) {
+    	    document.getElementById("title").innerText = `Select ${stateName}`;
+    	  }
 
-        if(response != lastLoggedResponse) 
-            putResponse(response);
+    	  if (feedback) {
+    	    const e = document.getElementById("feedback");
+    	    e.innerText = feedback;
+    	    if (isCorrect) {
+    	      e.classList.add("correct");
+    	    }
+    	  }
 
-        lastLoggedResponse = response;
-    }, 500);
+    	  courseraApi.callMethod({
+    	    type: "GET_STORED_VALUES",
+    	    data: ["lastLoadTime"],
+    	    onSuccess: function(values) {
+    	      courseraApi.callMethod({
+    	        type: "SET_STORED_VALUES",
+    	        data: {
+    	          lastLoadTime: Date.now()
+    	        }
+    	      });
+    	    }
+    	  });*/
+    	}
+  });
 });
